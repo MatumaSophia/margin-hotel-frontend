@@ -33,8 +33,6 @@ export default function StaffPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // formOpenFor = which section the form is for; editingStaffId = null means
-  // "creating new", otherwise it's the staffId of the row being edited.
   const [formOpenFor, setFormOpenFor] = useState<StaffType | null>(null);
   const [editingStaffId, setEditingStaffId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -86,10 +84,10 @@ export default function StaffPage() {
     setEditingStaffId(staff.staffId);
     setSubmitError(null);
     reset({
-      firstName: staff.name.firstName,
-      lastName: staff.name.lastName,
-      email: staff.contactDetails.email,
-      mobile: staff.contactDetails.mobile,
+      firstName: staff.firstName,
+      lastName: staff.lastName,
+      email: staff.email,
+      mobile: staff.mobile,
       deskOrOffice:
         type === 'manager'
           ? (staff as Manager).officeNumber
@@ -108,28 +106,41 @@ export default function StaffPage() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const name = { firstName: values.firstName, lastName: values.lastName };
-      const contactDetails = { email: values.email, mobile: values.mobile };
-
       if (formOpenFor === 'manager') {
         if (editingStaffId === null) {
-          await createManager({ name, contactDetails, officeNumber: values.deskOrOffice });
+          await createManager({
+            firstName: values.firstName,
+            lastName: values.lastName,
+            email: values.email,
+            mobile: values.mobile,
+            officeNumber: values.deskOrOffice,
+          });
         } else {
           await updateManager({
             staffId: editingStaffId,
-            name,
-            contactDetails,
+            firstName: values.firstName,
+            lastName: values.lastName,
+            email: values.email,
+            mobile: values.mobile,
             officeNumber: values.deskOrOffice,
           });
         }
       } else if (formOpenFor === 'receptionist') {
         if (editingStaffId === null) {
-          await createReceptionist({ name, contactDetails, deskNumber: values.deskOrOffice });
+          await createReceptionist({
+            firstName: values.firstName,
+            lastName: values.lastName,
+            email: values.email,
+            mobile: values.mobile,
+            deskNumber: values.deskOrOffice,
+          });
         } else {
           await updateReceptionist({
             staffId: editingStaffId,
-            name,
-            contactDetails,
+            firstName: values.firstName,
+            lastName: values.lastName,
+            email: values.email,
+            mobile: values.mobile,
             deskNumber: values.deskOrOffice,
           });
         }
@@ -151,20 +162,17 @@ export default function StaffPage() {
 
     setDeletingId(staffId);
     try {
-      // Backend returns a plain boolean, always HTTP 200 - so we check the
-      // body, not just whether the request "succeeded" (see gap #4/#10).
-      const success =
-        type === 'manager'
-          ? await deleteManager(staffId)
-          : await deleteReceptionist(staffId);
-
-      if (!success) {
-        alert('The backend reported this delete did not succeed.');
+      // Backend now returns 204 on success or 404 if not found - if this
+      // doesn't throw, the delete succeeded.
+      if (type === 'manager') {
+        await deleteManager(staffId);
+      } else {
+        await deleteReceptionist(staffId);
       }
       await loadStaff();
     } catch (err) {
       console.error(err);
-      alert('Could not delete. Check the backend is running and try again.');
+      alert('Could not delete. The record may not exist, or the backend is unreachable.');
     } finally {
       setDeletingId(null);
     }
@@ -302,10 +310,10 @@ export default function StaffPage() {
               <tr key={m.staffId} className="border-b">
                 <td className="py-2 pr-4">{m.staffId}</td>
                 <td className="py-2 pr-4">
-                  {m.name.firstName} {m.name.lastName}
+                  {m.firstName} {m.lastName}
                 </td>
-                <td className="py-2 pr-4">{m.contactDetails.email}</td>
-                <td className="py-2 pr-4">{m.contactDetails.mobile}</td>
+                <td className="py-2 pr-4">{m.email}</td>
+                <td className="py-2 pr-4">{m.mobile}</td>
                 <td className="py-2 pr-4">{m.officeNumber}</td>
                 <td className="py-2 pr-4 space-x-2">
                   <button
@@ -316,7 +324,7 @@ export default function StaffPage() {
                   </button>
                   <button
                     onClick={() =>
-                      handleDelete('manager', m.staffId, `${m.name.firstName} ${m.name.lastName}`)
+                      handleDelete('manager', m.staffId, `${m.firstName} ${m.lastName}`)
                     }
                     disabled={deletingId === m.staffId}
                     className="text-xs underline text-red-600 disabled:opacity-50"
@@ -354,10 +362,10 @@ export default function StaffPage() {
               <tr key={r.staffId} className="border-b">
                 <td className="py-2 pr-4">{r.staffId}</td>
                 <td className="py-2 pr-4">
-                  {r.name.firstName} {r.name.lastName}
+                  {r.firstName} {r.lastName}
                 </td>
-                <td className="py-2 pr-4">{r.contactDetails.email}</td>
-                <td className="py-2 pr-4">{r.contactDetails.mobile}</td>
+                <td className="py-2 pr-4">{r.email}</td>
+                <td className="py-2 pr-4">{r.mobile}</td>
                 <td className="py-2 pr-4">{r.deskNumber}</td>
                 <td className="py-2 pr-4 space-x-2">
                   <button
@@ -368,11 +376,7 @@ export default function StaffPage() {
                   </button>
                   <button
                     onClick={() =>
-                      handleDelete(
-                        'receptionist',
-                        r.staffId,
-                        `${r.name.firstName} ${r.name.lastName}`
-                      )
+                      handleDelete('receptionist', r.staffId, `${r.firstName} ${r.lastName}`)
                     }
                     disabled={deletingId === r.staffId}
                     className="text-xs underline text-red-600 disabled:opacity-50"
