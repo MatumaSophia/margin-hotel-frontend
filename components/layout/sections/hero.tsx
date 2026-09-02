@@ -35,9 +35,11 @@ export const HeroSection = () => {
           </p>
 
           <div className="space-y-4 md:space-y-0 md:space-x-4">
-            <Button className="w-5/6 md:w-1/4 font-bold group/arrow">
-              Book Now
-              <ArrowRight className="size-5 ml-2 group-hover/arrow:translate-x-1 transition-transform" />
+            <Button asChild className="w-5/6 md:w-1/4 font-bold group/arrow">
+              <Link href="/book">
+                Book Now
+                <ArrowRight className="size-5 ml-2 group-hover/arrow:translate-x-1 transition-transform" />
+              </Link>
             </Button>
 
             <Button
@@ -45,12 +47,7 @@ export const HeroSection = () => {
               variant="secondary"
               className="w-5/6 md:w-1/4 font-bold"
             >
-              <Link
-                href="#services"
-                target="_blank"
-              >
-                Our Rooms
-              </Link>
+              <Link href="#gallery">Our Rooms</Link>
             </Button>
           </div>
         </div>
