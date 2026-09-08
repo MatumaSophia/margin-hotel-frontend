@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/layout/navbar";
 import { HeroSection } from "@/components/layout/sections/hero";
+import { GallerySection } from "@/components/layout/sections/gallery";
 import { FeaturesSection } from "@/components/layout/sections/features";
 import { ServicesSection } from "@/components/layout/sections/services";
 import { ContactSection } from "@/components/layout/sections/contact";
@@ -42,6 +43,7 @@ export default function Home() {
     <>
       <Navbar />
       <HeroSection />
+      <GallerySection />
       <FeaturesSection />
       <ServicesSection />
       <ContactSection />
