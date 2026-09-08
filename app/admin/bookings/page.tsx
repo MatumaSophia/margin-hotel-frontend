@@ -1,57 +1,115 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookingForm } from "@/components/booking/booking-form";
+import { AddBookingDialog } from "@/components/booking/add-booking-dialog";
+import { ROOM_TYPE_LABELS, getRoomById } from "@/data/rooms";
 import type { BookingChannel } from "@/lib/validations/booking-schema";
 
-const STAFF_CHANNELS: { value: Extract<BookingChannel, "WALK_IN" | "TELEPHONIC">; label: string }[] = [
-    { value: "WALK_IN", label: "Walk-in" },
-    { value: "TELEPHONIC", label: "Telephonic" },
+interface BookingRow {
+    bookingId: number;
+    guestName: string;
+    room: string;
+    channel: BookingChannel;
+    checkInDate: string;
+    checkOutDate: string;
+    status: "CONFIRMED";
+}
+
+const CHANNEL_LABELS: Record<BookingChannel, string> = {
+    ONLINE: "Online",
+    WALK_IN: "Walk-in",
+    TELEPHONIC: "Telephonic",
+};
+
+const demoBookings: BookingRow[] = [
+    {
+        bookingId: 1001,
+        guestName: "Thabo Nkosi",
+        room: "Room 101 — Standard Room",
+        channel: "ONLINE",
+        checkInDate: "2026-09-12",
+        checkOutDate: "2026-09-14",
+        status: "CONFIRMED",
+    },
+    {
+        bookingId: 1002,
+        guestName: "Amahle Dlamini",
+        room: "Room 201 — Deluxe Room",
+        channel: "WALK_IN",
+        checkInDate: "2026-09-15",
+        checkOutDate: "2026-09-18",
+        status: "CONFIRMED",
+    },
+    {
+        bookingId: 1003,
+        guestName: "Sipho Mokoena",
+        room: "Room 301 — Suite",
+        channel: "TELEPHONIC",
+        checkInDate: "2026-09-20",
+        checkOutDate: "2026-09-22",
+        status: "CONFIRMED",
+    },
 ];
 
-export default function NewBookingPage() {
-    const router = useRouter();
-    const [channel, setChannel] = useState<"WALK_IN" | "TELEPHONIC">("WALK_IN");
+export default function BookingsPage() {
+    const [bookings, setBookings] = useState<BookingRow[]>(demoBookings);
 
     return (
-        <div className="max-w-2xl">
-            <h1 className="text-2xl font-bold mb-1">New booking</h1>
-            <p className="text-sm text-muted-foreground mb-6">
-                Create a booking on the guest&apos;s behalf — for walk-ins or phone
-                reservations. This is the same form used on the guest site, with the
-                channel fixed to how the booking came in.
-            </p>
+        <div>
+            <div className="flex items-center justify-between mb-6">
+                <h1 className="text-2xl font-bold">Bookings</h1>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>
-                        <div className="flex gap-2">
-                            {STAFF_CHANNELS.map((c) => (
-                                <Button
-                                    key={c.value}
-                                    type="button"
-                                    variant={channel === c.value ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => setChannel(c.value)}
-                                >
-                                    {c.label}
-                                </Button>
-                            ))}
-                        </div>
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <BookingForm
-                        key={channel}
-                        channel={channel}
-                        onSuccess={() => router.push("/admin/bookings")}
-                    />
-                </CardContent>
-            </Card>
+                <AddBookingDialog
+                    onBookingCreated={(booking, values) => {
+                        const room = getRoomById(values.roomId);
+
+                        setBookings((prev) => [
+                            {
+                                bookingId: booking.bookingId,
+                                guestName: `${values.firstName} ${values.lastName}`,
+                                room: room
+                                    ? `Room ${room.roomNumber} — ${ROOM_TYPE_LABELS[room.type]}`
+                                    : values.roomId,
+                                channel: booking.channel,
+                                checkInDate: booking.checkInDate,
+                                checkOutDate: booking.checkOutDate,
+                                status: "CONFIRMED",
+                            },
+                            ...prev,
+                        ]);
+                    }}
+                />
+            </div>
+
+            <table className="w-full text-sm border-collapse">
+                <thead>
+                    <tr className="border-b text-left">
+                        <th className="py-2 pr-4">Booking ID</th>
+                        <th className="py-2 pr-4">Guest</th>
+                        <th className="py-2 pr-4">Room</th>
+                        <th className="py-2 pr-4">Channel</th>
+                        <th className="py-2 pr-4">Check-in</th>
+                        <th className="py-2 pr-4">Check-out</th>
+                        <th className="py-2 pr-4">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {bookings.map((b) => (
+                        <tr key={b.bookingId} className="border-b">
+                            <td className="py-2 pr-4">{b.bookingId}</td>
+                            <td className="py-2 pr-4">{b.guestName}</td>
+                            <td className="py-2 pr-4">{b.room}</td>
+                            <td className="py-2 pr-4">{CHANNEL_LABELS[b.channel]}</td>
+                            <td className="py-2 pr-4">{b.checkInDate}</td>
+                            <td className="py-2 pr-4">{b.checkOutDate}</td>
+                            <td className="py-2 pr-4">
+                                <span className="text-green-600 font-medium">{b.status}</span>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 }
